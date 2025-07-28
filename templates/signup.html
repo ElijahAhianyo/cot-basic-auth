@@ -1,0 +1,98 @@
+{%- let urls = urls -%}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <link rel="stylesheet" href="{{ static_files.url_for("css/login.css")? }}">
+</head>
+<body>
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Sign Up</h1>
+      <p>Create a new account to get started</p>
+    </div>
+
+    <form class="login-form", method="post", action = "">
+      {% if form.has_errors() %}
+      <div>
+        {% for error in form.errors_for(FormErrorTarget::Form) %}
+
+        <div class="error">
+          <p>{{ error }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="form-group">
+        <label for="fullname">Full Name</label>
+        <input
+                type="text"
+                id="fullname"
+                name="fullname"
+                placeholder="Enter your full name"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+                type="text"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Choose a username"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password1">Password</label>
+        <input
+                type="password"
+                id="password1"
+                name="password1"
+                placeholder="Create a password"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password2">Confirm Password</label>
+        <input
+                type="password"
+                id="password2"
+                name="password2"
+                placeholder="Confirm your password"
+        />
+      </div>
+
+      <div class="form-options">
+        <div class="remember-me">
+          <input type="checkbox" id="terms" />
+          <label for="terms">I agree to the Terms & Conditions</label>
+        </div>
+      </div>
+
+      <button type="submit" class="login-button">
+        Create Account
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>Already have an account? <a href="{{ cot::reverse!(urls, "login")? }}" class="signup-link">Login</a></p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

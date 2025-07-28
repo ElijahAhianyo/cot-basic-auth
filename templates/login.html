@@ -1,0 +1,70 @@
+{%- let urls = urls -%}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="{{ static_files.url_for("css/login.css")? }}">
+</head>
+<body>
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h1>Login</h1>
+            <p>Enter your credentials to access your account</p>
+
+        </div>
+
+        <form class="login-form" action="" method="post">
+            {% if form.has_errors() %}
+            <div>
+                {% for error in form.errors_for(FormErrorTarget::Form) %}
+
+                <div class="error">
+                    <p>{{ error }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <label for="{{ form.username.id() }}">Username</label>
+                <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Enter your username"
+                />
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id() }}">Password</label>
+                <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                />
+            </div>
+
+            <div class="form-options">
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" />
+                    <label for="remember">Remember me</label>
+                </div>
+                <a  href="{{ cot::reverse!(urls, "forgot_password")? }}" class="forgot-password">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="login-button">
+                Login
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>Don't have an account? <a href="{{ cot::reverse!(urls, "signup")? }}" class="signup-link">Sign up</a></p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
