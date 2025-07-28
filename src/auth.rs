@@ -145,10 +145,7 @@ pub struct UserCredentials {
 
 impl UserCredentials {
     pub fn new(username: String, password: Password) -> Self {
-        Self {
-            username,
-            password,
-        }
+        Self { username, password }
     }
     pub fn username(&self) -> &str {
         &self.username
@@ -157,7 +154,6 @@ impl UserCredentials {
     pub fn password(&self) -> &Password {
         &self.password
     }
-
 }
 
 pub struct UserBackend {

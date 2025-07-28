@@ -11,7 +11,6 @@ use cot::admin::{AdminModel, AdminModelManager};
 use cot::auth::AuthBackend;
 use cot::auth::db::DatabaseUserApp;
 use cot::cli::CliMetadata;
-use cot::config::{AuthBackendConfig, DatabaseConfig, ProjectConfig};
 use cot::db::migrations::SyncDynMigration;
 use cot::db::{DatabaseBackend, Model};
 use cot::form::{Form, FormContext, FormField};
@@ -20,6 +19,7 @@ use cot::project::{
     AuthBackendContext, MiddlewareContext, RootHandler, RootHandlerBuilder, WithConfig,
 };
 
+use crate::forms::forgot_password::forgot_password;
 use auth::UserBackend;
 use cot::request::Request;
 use cot::response::{Response, ResponseExt};
@@ -77,6 +77,7 @@ impl App for AuthApp {
             Route::with_handler_and_name("/login", login, "login"),
             Route::with_handler_and_name("/home", home, "home"),
             Route::with_handler_and_name("/signup", signup, "signup"),
+            Route::with_handler_and_name("/forgot-password", forgot_password, "forgot_password"),
         ])
     }
 
@@ -95,18 +96,6 @@ impl Project for AuthProject {
     fn register_apps(&self, apps: &mut AppBuilder, _context: &ProjectContext<WithConfig>) {
         apps.register(DatabaseUserApp::new());
         apps.register_with_views(AuthApp, "");
-    }
-
-    fn config(&self, _config_name: &str) -> cot::Result<ProjectConfig> {
-        Ok(ProjectConfig::builder()
-            .debug(true)
-            .database(
-                DatabaseConfig::builder()
-                    .url("postgresql://postgres:postgres@localhost:5432/cot_pg")
-                    .build(),
-            )
-            .auth_backend(AuthBackendConfig::Database)
-            .build())
     }
 
     fn middlewares(&self, handler: RootHandlerBuilder, context: &MiddlewareContext) -> RootHandler {
