@@ -85,7 +85,12 @@ impl User {
             Auto::Auto => unreachable!("DatabaseUser constructed with an unknown ID"),
         }
     }
+    #[must_use]
+    pub fn password_hash(&self) -> &PasswordHash {
+        &self.password
+    }
 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -99,6 +104,11 @@ impl User {
             .await
             .map_err(AuthError::backend_error)?;
         Ok(user)
+    }
+
+    pub async fn set_password(&mut self, password: &Password) -> &mut Self {
+        self.password = PasswordHash::from_password(password);
+        self
     }
 }
 
