@@ -1,6 +1,7 @@
 mod auth;
 mod forms;
 mod migrations;
+mod utils;
 
 use std::any::Any;
 
