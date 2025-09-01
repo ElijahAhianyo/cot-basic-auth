@@ -3,10 +3,12 @@ mod forms;
 mod migrations;
 mod utils;
 
-
 use std::sync::Arc;
 
+use crate::forms::forgot_password::{forgot_password, reset_password_confirm};
 use askama::Template;
+use auth::UserBackend;
+use cot::auth::AuthBackend;
 use cot::auth::db::DatabaseUserApp;
 use cot::cli::CliMetadata;
 use cot::db::migrations::SyncDynMigration;
@@ -14,9 +16,6 @@ use cot::middleware::{AuthMiddleware, LiveReloadMiddleware, SessionMiddleware};
 use cot::project::{
     AuthBackendContext, MiddlewareContext, RootHandler, RootHandlerBuilder, WithConfig,
 };
-use cot::auth::AuthBackend;
-use crate::forms::forgot_password::{forgot_password, reset_password_confirm};
-use auth::UserBackend;
 use cot::request::Request;
 use cot::response::{Response, ResponseExt};
 use cot::router::{Route, Router};
@@ -25,7 +24,6 @@ use cot::{App, AppBuilder, Body, Project, ProjectContext, StatusCode, static_fil
 use forms::login::login;
 use forms::signup::signup;
 
-const MAX_USERNAME_LENGTH: u32 = 255;
 #[derive(Debug, Template)]
 #[template(path = "index.html")]
 struct IndexTemplate {}

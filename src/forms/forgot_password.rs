@@ -13,6 +13,7 @@ use cot::router::Urls;
 use cot::{Body, Method, StatusCode, reverse_redirect};
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
+use thiserror::Error;
 
 type HmacSHa256 = Hmac<Sha256>;
 
@@ -54,12 +55,29 @@ impl ResetToken {
     }
 }
 
-fn decode_b64url_to_i64_from_decimal(b64: &str) -> Result<i64, Box<dyn std::error::Error>> {
+#[derive(Debug, Clone, Error)]
+enum ForgotPasswordError {
+    #[error("could not decode value: {value}. {message}")]
+    DecodeError { value: String, message: String },
+}
+
+impl ForgotPasswordError {
+    fn decode_error(value: String, message: String) -> Self {
+        Self::DecodeError { value, message }
+    }
+}
+
+fn decode_b64url_to_i64_from_decimal(b64: &str) -> Result<i64, ForgotPasswordError> {
     // decode to bytes (this decodes values encoded from the textual decimal representation,
     // i.e. encode(user.id().to_string()))
-    let bytes = URL_SAFE_NO_PAD.decode(b64)?;
-    let s = String::from_utf8(bytes)?;
-    let id = s.parse::<i64>()?;
+    let bytes = URL_SAFE_NO_PAD
+        .decode(b64)
+        .map_err(|err| ForgotPasswordError::decode_error(b64.to_string(), err.to_string()))?;
+    let s = String::from_utf8(bytes)
+        .map_err(|err| ForgotPasswordError::decode_error(b64.to_string(), err.to_string()))?;
+    let id = s
+        .parse::<i64>()
+        .map_err(|err| ForgotPasswordError::decode_error(b64.to_string(), err.to_string()))?;
     Ok(id)
 }
 
@@ -187,12 +205,14 @@ pub(crate) async fn reset_password_confirm(
         let form_context = match form {
             FormResult::Ok(form) => {
                 let mut ctx = form.to_context().await;
+
                 if let (Some(token), Some(uid)) = (params.get("token"), params.get("uid")) {
                     let user_id = decode_b64url_to_i64_from_decimal(uid);
+
                     match user_id {
                         Ok(user_id) => {
-                            let user = User::get_by_id(&db, user_id).await;
-                            if let Ok(Some(mut user)) = user {
+                            let user = User::get_by_id(&db, user_id).await?;
+                            if let Some(mut user) = user {
                                 let validated_form = form.validate_password();
                                 match validated_form {
                                     Ok(validated_form) => {
