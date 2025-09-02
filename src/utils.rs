@@ -11,7 +11,7 @@ impl Base36 {
         Ok(BigUint::from_str_radix(s, BASE36_RADIX)?.to_bytes_be())
     }
 
-    pub fn encode(buf: &[u8]) -> String {
-        BigUint::from_bytes_be(buf).to_str_radix(BASE36_RADIX)
+    pub fn encode(num: u64) -> String {
+        BigUint::from(num).to_str_radix(BASE36_RADIX)
     }
 }

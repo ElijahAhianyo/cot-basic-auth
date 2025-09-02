@@ -13,7 +13,6 @@ use cot::router::Urls;
 use cot::{Body, Method, StatusCode, reverse_redirect};
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
-use thiserror::Error;
 
 type HmacSHa256 = Hmac<Sha256>;
 
@@ -26,7 +25,8 @@ impl ResetToken {
     }
 
     pub fn make_token_with_timestamp(&self, user: &User, secret: &[u8], ts: i64) -> String {
-        let ts_b36 = Base36::encode(ts.to_string().as_bytes());
+        // the current timestamp is always going to be positive, so this cast is safe.
+        let ts_b36 = Base36::encode(ts as u64);
         let data = format!("{}{:?}{}", user.id(), &user.password_hash(), ts);
 
         let mut mac = HmacSHa256::new_from_slice(secret).unwrap();
@@ -55,29 +55,13 @@ impl ResetToken {
     }
 }
 
-#[derive(Debug, Clone, Error)]
-enum ForgotPasswordError {
-    #[error("could not decode value: {value}. {message}")]
-    DecodeError { value: String, message: String },
-}
+fn decode_b64url_to_i64_from_decimal(
+    b64: &str,
+) -> Result<i64, Box<dyn std::error::Error + Sync + Send>> {
+    let bytes = URL_SAFE_NO_PAD.decode(b64)?;
+    let s = String::from_utf8(bytes)?;
+    let id = s.parse::<i64>()?;
 
-impl ForgotPasswordError {
-    fn decode_error(value: String, message: String) -> Self {
-        Self::DecodeError { value, message }
-    }
-}
-
-fn decode_b64url_to_i64_from_decimal(b64: &str) -> Result<i64, ForgotPasswordError> {
-    // decode to bytes (this decodes values encoded from the textual decimal representation,
-    // i.e. encode(user.id().to_string()))
-    let bytes = URL_SAFE_NO_PAD
-        .decode(b64)
-        .map_err(|err| ForgotPasswordError::decode_error(b64.to_string(), err.to_string()))?;
-    let s = String::from_utf8(bytes)
-        .map_err(|err| ForgotPasswordError::decode_error(b64.to_string(), err.to_string()))?;
-    let id = s
-        .parse::<i64>()
-        .map_err(|err| ForgotPasswordError::decode_error(b64.to_string(), err.to_string()))?;
     Ok(id)
 }
 
