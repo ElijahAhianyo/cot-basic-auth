@@ -172,6 +172,7 @@ pub(crate) struct ResetPasswordConfirmTemplate<'a> {
     urls: &'a Urls,
     static_files: StaticFiles,
     form: <ResetPasswordConfirmForm as Form>::Context,
+    reset_success: bool,
 }
 
 pub(crate) async fn reset_password_confirm(
@@ -180,6 +181,7 @@ pub(crate) async fn reset_password_confirm(
     RequestDb(db): RequestDb,
     static_files: StaticFiles,
 ) -> cot::Result<Response> {
+    let mut reset_success = false;
     let reset_pass_context = if request.method() == Method::GET {
         ResetPasswordConfirmForm::build_context(&mut request).await?
     } else if request.method() == Method::POST {
@@ -208,7 +210,7 @@ pub(crate) async fn reset_password_confirm(
                                         ) {
                                             user.set_password(&validated_form.password).await;
                                             user.save(&db).await?;
-                                            return Ok(reverse_redirect!(urls, "login")?);
+                                            reset_success = true;
                                         } else {
                                             ctx.add_error(
                                                 FormErrorTarget::Form,
@@ -258,6 +260,7 @@ pub(crate) async fn reset_password_confirm(
         urls: &urls,
         static_files: static_files,
         form: reset_pass_context,
+        reset_success,
     };
     let rendered = reset_template.render()?;
 
