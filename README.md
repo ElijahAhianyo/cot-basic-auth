@@ -2,9 +2,9 @@
 A simple project to demonstrate how to use basic authentication with the [`cot`](https://github.com/cot/cot) library.
 
 ## Features
- -[x] Login
- -[x] sign up 
- -[ ] Forgot password
+ - [x] Login
+ - [x] sign up 
+ - [ ] Forgot password
 
 
 # How to run
