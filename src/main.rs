@@ -1,26 +1,21 @@
 mod auth;
 mod forms;
 mod migrations;
-
-use std::any::Any;
+mod utils;
 
 use std::sync::Arc;
 
+use crate::forms::forgot_password::{forgot_password, reset_password_confirm};
 use askama::Template;
-use cot::admin::{AdminModel, AdminModelManager};
+use auth::UserBackend;
 use cot::auth::AuthBackend;
 use cot::auth::db::DatabaseUserApp;
 use cot::cli::CliMetadata;
 use cot::db::migrations::SyncDynMigration;
-use cot::db::{DatabaseBackend, Model};
-use cot::form::{Form, FormContext, FormField};
 use cot::middleware::{AuthMiddleware, LiveReloadMiddleware, SessionMiddleware};
 use cot::project::{
     AuthBackendContext, MiddlewareContext, RootHandler, RootHandlerBuilder, WithConfig,
 };
-
-use crate::forms::forgot_password::forgot_password;
-use auth::UserBackend;
 use cot::request::Request;
 use cot::response::{Response, ResponseExt};
 use cot::router::{Route, Router};
@@ -29,7 +24,6 @@ use cot::{App, AppBuilder, Body, Project, ProjectContext, StatusCode, static_fil
 use forms::login::login;
 use forms::signup::signup;
 
-const MAX_USERNAME_LENGTH: u32 = 255;
 #[derive(Debug, Template)]
 #[template(path = "index.html")]
 struct IndexTemplate {}
@@ -38,7 +32,7 @@ struct IndexTemplate {}
 #[template(path = "home.html")]
 struct HomeTemplate {}
 
-async fn index(request: Request) -> cot::Result<Response> {
+async fn index(_request: Request) -> cot::Result<Response> {
     let index_template = IndexTemplate {};
     let rendered = index_template.render()?;
 
@@ -49,7 +43,7 @@ async fn index(request: Request) -> cot::Result<Response> {
     Ok(response)
 }
 
-async fn home(request: Request) -> cot::Result<Response> {
+async fn home(_request: Request) -> cot::Result<Response> {
     let home_template = HomeTemplate {};
     let rendered = home_template.render()?;
 
@@ -78,6 +72,11 @@ impl App for AuthApp {
             Route::with_handler_and_name("/home", home, "home"),
             Route::with_handler_and_name("/signup", signup, "signup"),
             Route::with_handler_and_name("/forgot-password", forgot_password, "forgot_password"),
+            Route::with_handler_and_name(
+                "/reset/{token}/{uid}",
+                reset_password_confirm,
+                "reset_password_confirm",
+            ),
         ])
     }
 

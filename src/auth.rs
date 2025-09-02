@@ -85,20 +85,29 @@ impl User {
             Auto::Auto => unreachable!("DatabaseUser constructed with an unknown ID"),
         }
     }
+    #[must_use]
+    pub fn password_hash(&self) -> &PasswordHash {
+        &self.password
+    }
 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
-
     pub async fn get_by_id<DB: cot::db::DatabaseBackend>(
         db: &DB,
         id: i64,
     ) -> cot::auth::Result<Option<Self>> {
-        let user = query!(User, $id == id)
+        let db_user = query!(User, $id == id)
             .get(db)
             .await
             .map_err(AuthError::backend_error)?;
-        Ok(user)
+
+        Ok(db_user)
+    }
+    pub async fn set_password(&mut self, password: &Password) -> &mut Self {
+        self.password = PasswordHash::from_password(password);
+        self
     }
 }
 
@@ -192,6 +201,7 @@ impl AuthBackend for UserBackend {
             return Err(AuthError::UserIdTypeNotSupported);
         };
 
+        #[expect(trivial_casts)]
         let user = User::get_by_id(&self.database, id)
             .await?
             .map(|user| Box::new(user) as Box<dyn cot::auth::User + Send + Sync>);
