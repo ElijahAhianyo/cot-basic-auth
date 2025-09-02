@@ -1,5 +1,5 @@
 use num_bigint::{BigUint, ParseBigIntError};
-use num_traits::Num;
+use num_traits::{Num, ToPrimitive};
 
 pub const BASE36_RADIX: u32 = 36;
 
@@ -7,8 +7,8 @@ pub const BASE36_RADIX: u32 = 36;
 pub struct Base36;
 
 impl Base36 {
-    pub fn decode(s: &str) -> Result<Vec<u8>, ParseBigIntError> {
-        Ok(BigUint::from_str_radix(s, BASE36_RADIX)?.to_bytes_be())
+    pub fn decode(s: &str) -> Result<Option<u64>, ParseBigIntError> {
+        Ok(BigUint::from_str_radix(s, BASE36_RADIX)?.to_u64())
     }
 
     pub fn encode(num: u64) -> String {
