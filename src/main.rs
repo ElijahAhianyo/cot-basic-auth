@@ -19,10 +19,9 @@ use cot::request::Request;
 use cot::response::{Response, ResponseExt};
 use cot::router::{Route, Router};
 use cot::static_files::{StaticFile, StaticFilesMiddleware};
-use cot::{App, AppBuilder, Body, Project, ProjectContext, StatusCode, static_files, Template};
+use cot::{App, AppBuilder, Body, Project, ProjectContext, StatusCode, Template, static_files};
 use forms::login::login;
 use forms::signup::signup;
-
 
 #[derive(Debug, Template)]
 #[template(path = "index.html")]
@@ -32,6 +31,7 @@ struct IndexTemplate {}
 #[template(path = "home.html")]
 struct HomeTemplate {}
 
+#[expect(unused)]
 async fn index(_request: Request) -> cot::Result<Response> {
     let index_template = IndexTemplate {};
     let rendered = index_template.render()?;
@@ -61,13 +61,9 @@ impl App for AuthApp {
         env!("CARGO_CRATE_NAME")
     }
 
-    fn migrations(&self) -> Vec<Box<SyncDynMigration>> {
-        cot::db::migrations::wrap_migrations(migrations::MIGRATIONS)
-    }
-
     fn router(&self) -> Router {
         Router::with_urls([
-            Route::with_handler_and_name("/", index, "index"),
+            Route::with_handler_and_name("/", login, "login"),
             Route::with_handler_and_name("/login", login, "login"),
             Route::with_handler_and_name("/home", home, "home"),
             Route::with_handler_and_name("/signup", signup, "signup"),
@@ -78,6 +74,10 @@ impl App for AuthApp {
                 "reset_password_confirm",
             ),
         ])
+    }
+
+    fn migrations(&self) -> Vec<Box<SyncDynMigration>> {
+        cot::db::migrations::wrap_migrations(migrations::MIGRATIONS)
     }
 
     fn static_files(&self) -> Vec<StaticFile> {
@@ -97,6 +97,12 @@ impl Project for AuthProject {
         apps.register_with_views(AuthApp, "");
     }
 
+    fn auth_backend(&self, context: &AuthBackendContext) -> Arc<dyn AuthBackend> {
+        let db = context.database().clone();
+        let backend = Arc::new(UserBackend::new(db)) as Arc<dyn AuthBackend>;
+        backend
+    }
+
     fn middlewares(&self, handler: RootHandlerBuilder, context: &MiddlewareContext) -> RootHandler {
         handler
             .middleware(StaticFilesMiddleware::from_context(context))
@@ -104,13 +110,6 @@ impl Project for AuthProject {
             .middleware(SessionMiddleware::from_context(context))
             .middleware(LiveReloadMiddleware::new())
             .build()
-    }
-
-    fn auth_backend(&self, context: &AuthBackendContext) -> Arc<dyn AuthBackend> {
-        let db = context.database().clone();
-        let backend =
-            Arc::new(UserBackend::new(db)) as Arc<dyn AuthBackend>;
-        backend
     }
 }
 

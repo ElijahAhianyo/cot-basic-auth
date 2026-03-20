@@ -13,7 +13,6 @@ use sha2::Sha512;
 use std::any::Any;
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
-use std::sync::Arc;
 
 #[derive(Debug, Clone, Form)]
 #[model]
