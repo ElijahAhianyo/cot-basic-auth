@@ -1,5 +1,4 @@
 use crate::auth::authenticate;
-use askama::Template;
 use cot::auth::Auth;
 use cot::common_types::Password;
 use cot::form::{
@@ -9,7 +8,7 @@ use cot::request::Request;
 use cot::request::extractors::StaticFiles;
 use cot::response::{Response, ResponseExt};
 use cot::router::Urls;
-use cot::{Body, Method, StatusCode, reverse_redirect};
+use cot::{Body, Method, StatusCode, reverse_redirect, Template};
 
 #[derive(Debug, Form, Clone)]
 pub(crate) struct LoginForm {

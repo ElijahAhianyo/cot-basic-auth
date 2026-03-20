@@ -1,16 +1,15 @@
 use crate::auth::User;
 use crate::utils::{BASE36_RADIX, Base36};
-use askama::Template;
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use chrono::Utc;
 use cot::common_types::{Email, Password};
-use cot::db::{Model, query};
+use cot::db::{Model, query, Database};
 use cot::form::{Form, FormContext, FormErrorTarget, FormFieldValidationError, FormResult};
-use cot::request::extractors::{RequestDb, StaticFiles};
+use cot::request::extractors::StaticFiles;
 use cot::request::{Request, RequestExt};
 use cot::response::{Response, ResponseExt};
 use cot::router::Urls;
-use cot::{Body, Method, StatusCode, reverse_redirect};
+use cot::{Body, Method, StatusCode, reverse_redirect, Template};
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 
@@ -82,7 +81,7 @@ pub(crate) struct ForgotPasswordTemplate<'a> {
 pub(crate) async fn forgot_password(
     urls: Urls,
     mut request: Request,
-    RequestDb(db): RequestDb,
+    db: Database,
     static_files: StaticFiles,
 ) -> cot::Result<Response> {
     let mut email_sent: bool = false;
@@ -178,7 +177,7 @@ pub(crate) struct ResetPasswordConfirmTemplate<'a> {
 pub(crate) async fn reset_password_confirm(
     urls: Urls,
     mut request: Request,
-    RequestDb(db): RequestDb,
+    db: Database,
     static_files: StaticFiles,
 ) -> cot::Result<Response> {
     let mut reset_success = false;

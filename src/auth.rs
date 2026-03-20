@@ -166,11 +166,11 @@ impl UserCredentials {
 }
 
 pub struct UserBackend {
-    database: Arc<Database>,
+    database: Database,
 }
 
 impl UserBackend {
-    pub fn new(database: Arc<Database>) -> Self {
+    pub fn new(database: Database) -> Self {
         Self { database }
     }
 }

@@ -1,13 +1,12 @@
 use crate::auth::User;
-use askama::Template;
 use cot::common_types::{Email, Password};
-use cot::db::{Auto, LimitedString, Model};
+use cot::db::{Auto, Database, LimitedString, Model};
 use cot::form::{Form, FormContext, FormErrorTarget, FormFieldValidationError, FormResult};
 use cot::request::Request;
-use cot::request::extractors::{RequestDb, StaticFiles};
+use cot::request::extractors::StaticFiles;
 use cot::response::{Response, ResponseExt};
 use cot::router::Urls;
-use cot::{Body, Method, StatusCode};
+use cot::{Body, Method, StatusCode, Template};
 
 #[derive(Debug, Form)]
 pub(crate) struct SignupForm {
@@ -40,7 +39,7 @@ impl SignupForm {
 pub(crate) async fn signup(
     urls: Urls,
     mut request: Request,
-    RequestDb(db): RequestDb,
+    db: Database,
     static_files: StaticFiles,
 ) -> cot::Result<Response> {
     let signup_context = if request.method() == Method::GET {

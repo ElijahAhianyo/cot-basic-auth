@@ -6,7 +6,6 @@ mod utils;
 use std::sync::Arc;
 
 use crate::forms::forgot_password::{forgot_password, reset_password_confirm};
-use askama::Template;
 use auth::UserBackend;
 use cot::auth::AuthBackend;
 use cot::auth::db::DatabaseUserApp;
@@ -20,9 +19,10 @@ use cot::request::Request;
 use cot::response::{Response, ResponseExt};
 use cot::router::{Route, Router};
 use cot::static_files::{StaticFile, StaticFilesMiddleware};
-use cot::{App, AppBuilder, Body, Project, ProjectContext, StatusCode, static_files};
+use cot::{App, AppBuilder, Body, Project, ProjectContext, StatusCode, static_files, Template};
 use forms::login::login;
 use forms::signup::signup;
+
 
 #[derive(Debug, Template)]
 #[template(path = "index.html")]
@@ -107,8 +107,9 @@ impl Project for AuthProject {
     }
 
     fn auth_backend(&self, context: &AuthBackendContext) -> Arc<dyn AuthBackend> {
+        let db = context.database().clone();
         let backend =
-            Arc::new(UserBackend::new(context.database().clone())) as Arc<dyn AuthBackend>;
+            Arc::new(UserBackend::new(db)) as Arc<dyn AuthBackend>;
         backend
     }
 }
