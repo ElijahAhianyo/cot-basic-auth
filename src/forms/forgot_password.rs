@@ -3,13 +3,15 @@ use crate::utils::{BASE36_RADIX, Base36};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use chrono::Utc;
 use cot::common_types::{Email, Password};
-use cot::db::{Model, query, Database};
+use cot::db::{Database, Model, query};
+use cot::email::{Email as EmailService, EmailMessage};
 use cot::form::{Form, FormContext, FormErrorTarget, FormFieldValidationError, FormResult};
+use cot::html::Html;
 use cot::request::extractors::StaticFiles;
 use cot::request::{Request, RequestExt};
 use cot::response::{Response, ResponseExt};
 use cot::router::Urls;
-use cot::{Body, Method, StatusCode, reverse_redirect, Template};
+use cot::{Body, Method, StatusCode, Template};
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 
@@ -78,11 +80,36 @@ pub(crate) struct ForgotPasswordTemplate<'a> {
     email_sent: bool,
 }
 
+async fn send_reset_email(
+    email_sender: EmailService,
+    reset_token: String,
+    uid_encoded: String,
+) -> cot::Result<Html> {
+    let message = EmailMessage::builder()
+        .from(Email::try_from("no-reply@example.com").unwrap())
+        .to(vec![Email::try_from("user@example.com").unwrap()])
+        .subject("Password Reset")
+        .body(format!(
+            r#"
+                    click link to reset password:
+
+                    http://127.0.0.1:8000/reset/{reset_token}/{uid_encoded}
+
+                  "#
+        ))
+        .build()?;
+
+    email_sender.send(message).await?;
+
+    Ok(Html::new("Email sent!"))
+}
+
 pub(crate) async fn forgot_password(
     urls: Urls,
     mut request: Request,
     db: Database,
     static_files: StaticFiles,
+    email: EmailService,
 ) -> cot::Result<Response> {
     let mut email_sent: bool = false;
 
@@ -95,20 +122,13 @@ pub(crate) async fn forgot_password(
                 let user = query!(User, $email == fg_form.email.clone())
                     .get(&db)
                     .await?;
+
                 if let Some(user) = user {
                     let uid_encoded = URL_SAFE_NO_PAD.encode(user.id().to_string());
-                    // TODO: Need to use secret from config for this
-                    let reset_token = ResetToken.make_token(&user, b"random-secret");
-                    // TODO: fix once email support is merged.
-                    //TODO: URI should come from cot.
-                    println!(
-                        r#"
-                    click link to reset password:
+                    let reset_token = ResetToken
+                        .make_token(&user, request.context().config().secret_key.as_bytes());
 
-                    http://127.0.0.1:8000/reset/{reset_token}/{uid_encoded}
-
-                    "#
-                    );
+                    send_reset_email(email, reset_token, uid_encoded).await?;
                     email_sent = true;
                 }
 
@@ -204,7 +224,7 @@ pub(crate) async fn reset_password_confirm(
                                         if ResetToken.check_token(
                                             &user,
                                             token,
-                                            b"random-secret",
+                                            request.context().config().secret_key.as_bytes(),
                                             3600,
                                         ) {
                                             user.set_password(&validated_form.password).await;

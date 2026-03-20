@@ -8,7 +8,7 @@ use cot::request::Request;
 use cot::request::extractors::StaticFiles;
 use cot::response::{Response, ResponseExt};
 use cot::router::Urls;
-use cot::{Body, Method, StatusCode, reverse_redirect, Template};
+use cot::{Body, Method, StatusCode, Template, reverse_redirect};
 
 #[derive(Debug, Form, Clone)]
 pub(crate) struct LoginForm {

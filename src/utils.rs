@@ -7,6 +7,7 @@ pub const BASE36_RADIX: u32 = 36;
 pub struct Base36;
 
 impl Base36 {
+    #[expect(unused)]
     pub fn decode(s: &str) -> Result<Option<u64>, ParseBigIntError> {
         Ok(BigUint::from_str_radix(s, BASE36_RADIX)?.to_u64())
     }
